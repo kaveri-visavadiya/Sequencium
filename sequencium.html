@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Sequencium</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Patrick+Hand&family=Kalam:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FBF6EC;
+    --paper-line:#ECE2C8;
+    --card-bg:#FFFDF7;
+    --ink:#2E2A24;
+    --ink-soft:#8A8170;
+    --red:#B23A30;
+    --red-pale:#F7E1DC;
+    --blue:#1F4E85;
+    --blue-pale:#DCE7F4;
+    --glow:#FFCE3A;
+    --shadow: rgba(46,42,36,0.22);
+  }
+
+  *{ box-sizing:border-box; }
+
+  body{
+    margin:0;
+    min-height:100vh;
+    background-color:var(--paper);
+    background-image:
+      linear-gradient(var(--paper-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--paper-line) 1px, transparent 1px);
+    background-size:26px 26px;
+    color:var(--ink);
+    font-family:'Patrick Hand', cursive;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:28px 16px 60px;
+  }
+
+  .title-block{
+    text-align:center;
+    margin-bottom:6px;
+  }
+  .title{
+    font-family:'Caveat', cursive;
+    font-weight:700;
+    font-size:clamp(48px, 9vw, 74px);
+    margin:0;
+    color:var(--ink);
+    transform:rotate(-1deg);
+    filter:url(#roughBig);
+  }
+  .underline{ display:block; margin:-10px auto 4px; }
+  .tagline{
+    color:var(--ink-soft);
+    font-size:1.1rem;
+    margin:0 0 18px;
+  }
+
+  .card{
+    background:var(--card-bg);
+    border:3px solid var(--ink);
+    border-radius:16px;
+    box-shadow:6px 8px 0 var(--shadow);
+    padding:28px 30px;
+    max-width:480px;
+    width:100%;
+    filter:url(#roughBig);
+  }
+  .card > *{ filter:none; } /* keep inner content crisp; only the card outline wobbles */
+
+  h2{
+    font-family:'Caveat', cursive;
+    font-size:2rem;
+    margin:0 0 14px;
+    text-align:center;
+  }
+
+  .stepper-row{
+    display:flex;
+    justify-content:center;
+    gap:30px;
+    margin:18px 0 22px;
+  }
+  .stepper{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:8px;
+  }
+  .stepper label{ font-size:1rem; color:var(--ink-soft); }
+  .stepper-controls{
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .stepper-btn{
+    width:34px; height:34px;
+    border:2.5px solid var(--ink);
+    border-radius:8px;
+    background:#fff;
+    font-family:'Patrick Hand', cursive;
+    font-size:1.2rem;
+    line-height:1;
+    cursor:pointer;
+    box-shadow:2px 3px 0 var(--ink);
+  }
+  .stepper-btn:hover{ transform:translate(-1px,-1px); }
+  .stepper-btn:active{ transform:translate(1px,1px); box-shadow:0 0 0 var(--ink); }
+  .stepper-btn:disabled{ opacity:.35; cursor:not-allowed; }
+  .stepper-val{
+    font-family:'Kalam', cursive;
+    font-weight:700;
+    font-size:1.4rem;
+    min-width:28px;
+    text-align:center;
+  }
+
+  .btn{
+    font-family:'Patrick Hand', cursive;
+    font-size:1.05rem;
+    padding:10px 24px;
+    border:3px solid var(--ink);
+    border-radius:10px;
+    background:#fff;
+    cursor:pointer;
+    box-shadow:3px 4px 0 var(--ink);
+    transition:transform .12s, box-shadow .12s;
+    filter:url(#roughSm);
+  }
+  .btn:hover{ transform:translate(-2px,-2px); box-shadow:5px 6px 0 var(--ink); }
+  .btn:active{ transform:translate(1px,1px); box-shadow:1px 2px 0 var(--ink); }
+  .btn:focus-visible{ outline:3px solid var(--ink); outline-offset:3px; }
+  .btn-primary{ background:var(--glow); }
+  .btn-danger{ background:var(--red); color:#fff; border-color:var(--ink); }
+  .btn-block{ display:block; width:100%; margin-top:6px; }
+  .btn-row{ display:flex; gap:12px; justify-content:center; margin-top:8px; }
+
+  details.rules{
+    margin-top:18px;
+    font-size:.98rem;
+    color:var(--ink-soft);
+  }
+  details.rules summary{
+    cursor:pointer;
+    color:var(--ink);
+    font-size:1.05rem;
+    margin-bottom:6px;
+  }
+  details.rules p{ margin:6px 0 0; line-height:1.5; }
+
+  .hidden{ display:none !important; }
+
+  /* ---- Game screen ---- */
+  #game-screen{ width:100%; max-width:620px; display:flex; flex-direction:column; align-items:center; }
+
+  .turn-bar{
+    width:100%;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:12px;
+    margin-bottom:16px;
+  }
+  .turn-indicator{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:8px 18px;
+    border:2.5px solid var(--ink);
+    border-radius:999px;
+    font-size:1.1rem;
+    background:#fff;
+    transition:background-color .2s;
+  }
+  .turn-indicator.turn-red{ background:var(--red-pale); }
+  .turn-indicator.turn-blue{ background:var(--blue-pale); }
+  .turn-dot{
+    width:16px; height:16px;
+    border-radius:50%;
+    border:2px solid var(--ink);
+  }
+  .turn-dot.red{ background:var(--red); }
+  .turn-dot.blue{ background:var(--blue); }
+
+  .controls{ display:flex; gap:10px; }
+  .controls .btn{ padding:8px 16px; font-size:.95rem; }
+
+  .scoreboard{
+    display:flex;
+    gap:18px;
+    font-size:1rem;
+    color:var(--ink-soft);
+    margin-bottom:14px;
+  }
+  .scoreboard .score-red{ color:var(--red); }
+  .scoreboard .score-blue{ color:var(--blue); }
+
+  .board-frame{
+    border:3px solid var(--ink);
+    border-radius:14px;
+    background:var(--card-bg);
+    padding:12px;
+    box-shadow:6px 8px 0 var(--shadow);
+    filter:url(#roughBig);
+  }
+  .board{
+    display:grid;
+    gap:4px;
+    width:min(520px, 86vw);
+    aspect-ratio: var(--cols) / var(--rows);
+    grid-template-columns: repeat(var(--cols), 1fr);
+    grid-template-rows: repeat(var(--rows), 1fr);
+    filter:none;
+  }
+  .cell{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border:2px solid var(--ink-soft);
+    background:var(--paper);
+    font-family:'Kalam', cursive;
+    font-weight:700;
+    font-size:1.1em;
+    user-select:none;
+    transition: transform .12s, box-shadow .12s, background-color .15s;
+  }
+  .cell.filled-R{ background:var(--red-pale); border-color:var(--red); color:var(--red); }
+  .cell.filled-B{ background:var(--blue-pale); border-color:var(--blue); color:var(--blue); }
+  .cell.avail-R{ background:var(--red-pale); border:2px dashed var(--glow); color:var(--red); opacity:.55; cursor:pointer; }
+  .cell.avail-B{ background:var(--blue-pale); border:2px dashed var(--glow); color:var(--blue); opacity:.55; cursor:pointer; }
+  .cell.avail-R:hover, .cell.avail-B:hover{
+    opacity:1;
+    transform:scale(1.12);
+    z-index:5;
+    box-shadow:0 0 0 3px var(--glow), 0 0 22px 6px rgba(255,206,58,.8);
+  }
+  .cell:focus-visible{ outline:3px solid var(--ink); outline-offset:2px; }
+
+  /* ---- Toast ---- */
+  .toast{
+    position:fixed;
+    top:18px;
+    left:50%;
+    transform:translate(-50%, -16px);
+    background:var(--ink);
+    color:var(--paper);
+    font-family:'Patrick Hand', cursive;
+    font-size:1rem;
+    padding:10px 20px;
+    border-radius:10px;
+    opacity:0;
+    transition:opacity .25s, transform .25s;
+    pointer-events:none;
+    z-index:50;
+  }
+  .toast.show{ opacity:1; transform:translate(-50%, 0); }
+
+  /* ---- Overlays ---- */
+  .overlay{
+    position:fixed; inset:0;
+    background:rgba(46,42,36,.55);
+    display:flex; align-items:center; justify-content:center;
+    z-index:40;
+    padding:20px;
+  }
+  .overlay-card{
+    background:var(--card-bg);
+    border:3px solid var(--ink);
+    border-radius:16px;
+    box-shadow:6px 8px 0 var(--shadow);
+    padding:30px 34px;
+    max-width:420px;
+    text-align:center;
+    filter:url(#roughBig);
+    position:relative;
+  }
+  .overlay-card > *{ filter:none; }
+  .close-btn{
+    position:absolute;
+    top:8px; right:12px;
+    background:none;
+    border:none;
+    font-family:'Patrick Hand', cursive;
+    font-size:1.6rem;
+    line-height:1;
+    color:var(--ink-soft);
+    cursor:pointer;
+    padding:4px 8px;
+  }
+  .close-btn:hover{ color:var(--ink); }
+  .close-btn:focus-visible{ outline:3px solid var(--ink); outline-offset:2px; }
+  .winner-text{
+    font-family:'Caveat', cursive;
+    font-weight:700;
+    font-size:2.6rem;
+    margin:0 0 10px;
+  }
+  .winner-text.win-red{ color:var(--red); }
+  .winner-text.win-blue{ color:var(--blue); }
+  .winner-detail{ color:var(--ink-soft); margin:0 0 18px; line-height:1.5; }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ transition:none !important; animation:none !important; }
+  }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <filter id="roughSm" x="-20%" y="-20%" width="140%" height="140%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="2" seed="7" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="2.6"/>
+    </filter>
+    <filter id="roughBig" x="-20%" y="-20%" width="140%" height="140%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.018" numOctaves="2" seed="11" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="6"/>
+    </filter>
+  </defs>
+</svg>
+
+<div class="title-block">
+  <h1 class="title">Sequencium</h1>
+  <svg class="underline" width="260" height="18" viewBox="0 0 260 18">
+    <path d="M4 10 Q 40 2, 80 10 T 160 10 T 256 9" fill="none" stroke="#2E2A24" stroke-width="3" stroke-linecap="round"/>
+  </svg>
+  <p class="tagline">A pen-and-paper chain-building duel, two players, one grid.</p>
+</div>
+
+<main>
+  <section id="setup-screen" class="card">
+    <h2>New Game</h2>
+    <div class="stepper-row">
+      <div class="stepper">
+        <label>Width</label>
+        <div class="stepper-controls">
+          <button class="stepper-btn" id="width-minus" type="button">−</button>
+          <span class="stepper-val" id="width-val">6</span>
+          <button class="stepper-btn" id="width-plus" type="button">+</button>
+        </div>
+      </div>
+      <div class="stepper">
+        <label>Height</label>
+        <div class="stepper-controls">
+          <button class="stepper-btn" id="height-minus" type="button">−</button>
+          <span class="stepper-val" id="height-val">6</span>
+          <button class="stepper-btn" id="height-plus" type="button">+</button>
+        </div>
+      </div>
+    </div>
+    <button class="btn btn-primary btn-block" id="start-btn" type="button">Start Game</button>
+    <details class="rules">
+      <summary>How to play</summary>
+      <p>Each player starts with a short diagonal chain of numbers in opposite corners. On your turn, place the next number in your chain on any empty square touching your highest number - up, down, sideways, or diagonally. Available squares are coloured with the respective player's colour. If you have no legal move, your turn is skipped. Once the board fills up completely, whoever built the longer chain wins.</p>
+    </details>
+  </section>
+
+  <section id="game-screen" class="hidden">
+    <div class="turn-bar">
+      <div class="turn-indicator" id="turn-indicator">
+        <span class="turn-dot red" id="turn-dot"></span>
+        <span id="turn-label">Player 1's turn</span>
+      </div>
+      <div class="controls">
+        <button class="btn btn-primary hidden" id="play-again-bar-btn" type="button">Play Again</button>
+        <button class="btn" id="undo-btn" type="button">Undo</button>
+        <button class="btn" id="quit-btn" type="button">Quit</button>
+      </div>
+    </div>
+    <div class="scoreboard">
+      <span class="score-red" id="score-red">Red: 0</span>
+      <span class="score-blue" id="score-blue">Blue: 0</span>
+    </div>
+    <div class="board-frame">
+      <div class="board" id="board"></div>
+    </div>
+  </section>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<div class="overlay hidden" id="winner-overlay">
+  <div class="overlay-card">
+    <button class="close-btn" id="winner-close-btn" type="button" aria-label="Close">×</button>
+    <h2 class="winner-text" id="winner-text">Player 1 wins!</h2>
+    <p class="winner-detail" id="winner-detail"></p>
+    <button class="btn btn-primary" id="play-again-btn" type="button">Play Again</button>
+  </div>
+</div>
+
+<div class="overlay hidden" id="quit-overlay">
+  <div class="overlay-card">
+    <h2>Quit this game?</h2>
+    <p class="winner-detail">Your progress will be lost.</p>
+    <div class="btn-row">
+      <button class="btn" id="quit-cancel-btn" type="button">Keep Playing</button>
+      <button class="btn btn-danger" id="quit-confirm-btn" type="button">Quit</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  const TURN_ORDER = ['R','B','B','R'];
+  const MIN_DIM = 3, MAX_DIM = 10;
+
+  function createBoard(m, n){
+    const board = Array.from({length:m}, () => Array(n).fill(null));
+    const x = Math.floor(Math.min(m,n) / 2);
+    for(let i=0; i<x; i++){
+      board[i][i] = {number:i+1, player:'R'};
+      board[m-1-i][n-1-i] = {number:i+1, player:'B'};
+    }
+    return board;
+  }
+
+  function isTerminal(board, m, n){
+    for(let i=0;i<m;i++) for(let j=0;j<n;j++) if(board[i][j] === null) return false;
+    return true;
+  }
+
+  function getCurrentPlayer(turnIdx){
+    return TURN_ORDER[turnIdx % TURN_ORDER.length];
+  }
+
+  function findFinalBranchLength(board){
+    const result = {};
+    for(const row of board){
+      for(const cell of row){
+        if(cell === null) continue;
+        if(!(cell.player in result) || cell.number > result[cell.player]) result[cell.player] = cell.number;
+      }
+    }
+    return result;
+  }
+
+  function availableActions(board, m, n, currentPlayer){
+    const indices = [];
+    for(let i=0;i<m;i++){
+      for(let j=0;j<n;j++){
+        const cell = board[i][j];
+        if(cell && cell.player === currentPlayer) indices.push({number:cell.number, row:i, col:j});
+      }
+    }
+    indices.sort((a,b) => b.number - a.number);
+
+    const actions = [];
+    const marked = new Set();
+    for(const {number, row, col} of indices){
+      for(let i=row-1; i<=row+1; i++){
+        for(let j=col-1; j<=col+1; j++){
+          if(i === row && j === col) continue;
+          if(i<0 || i>=m || j<0 || j>=n) continue;
+          if(board[i][j] !== null) continue;
+          const key = i+','+j;
+          if(marked.has(key)) continue;
+          actions.push({number:number+1, row:i, col:j});
+          marked.add(key);
+        }
+      }
+    }
+    return actions;
+  }
+
+  // ---- DOM refs ----
+  const setupScreen = document.getElementById('setup-screen');
+  const gameScreen = document.getElementById('game-screen');
+  const boardEl = document.getElementById('board');
+  const turnIndicator = document.getElementById('turn-indicator');
+  const turnDot = document.getElementById('turn-dot');
+  const turnLabel = document.getElementById('turn-label');
+  const undoBtn = document.getElementById('undo-btn');
+  const quitBtn = document.getElementById('quit-btn');
+  const scoreRed = document.getElementById('score-red');
+  const scoreBlue = document.getElementById('score-blue');
+  const toastEl = document.getElementById('toast');
+  const winnerOverlay = document.getElementById('winner-overlay');
+  const winnerText = document.getElementById('winner-text');
+  const winnerDetail = document.getElementById('winner-detail');
+  const playAgainBtn = document.getElementById('play-again-btn');
+  const playAgainBarBtn = document.getElementById('play-again-bar-btn');
+  const winnerCloseBtn = document.getElementById('winner-close-btn');
+  const quitOverlay = document.getElementById('quit-overlay');
+  const quitCancelBtn = document.getElementById('quit-cancel-btn');
+  const quitConfirmBtn = document.getElementById('quit-confirm-btn');
+
+  const widthVal = document.getElementById('width-val');
+  const heightVal = document.getElementById('height-val');
+  const widthMinus = document.getElementById('width-minus');
+  const widthPlus = document.getElementById('width-plus');
+  const heightMinus = document.getElementById('height-minus');
+  const heightPlus = document.getElementById('height-plus');
+  const startBtn = document.getElementById('start-btn');
+
+  let boardW = 6, boardH = 6;
+
+  function clampStepper(val){ return Math.max(MIN_DIM, Math.min(MAX_DIM, val)); }
+  function refreshSteppers(){
+    widthVal.textContent = boardW;
+    heightVal.textContent = boardH;
+    widthMinus.disabled = boardW <= MIN_DIM;
+    widthPlus.disabled = boardW >= MAX_DIM;
+    heightMinus.disabled = boardH <= MIN_DIM;
+    heightPlus.disabled = boardH >= MAX_DIM;
+  }
+  widthMinus.addEventListener('click', () => { boardW = clampStepper(boardW-1); refreshSteppers(); });
+  widthPlus.addEventListener('click', () => { boardW = clampStepper(boardW+1); refreshSteppers(); });
+  heightMinus.addEventListener('click', () => { boardH = clampStepper(boardH-1); refreshSteppers(); });
+  heightPlus.addEventListener('click', () => { boardH = clampStepper(boardH+1); refreshSteppers(); });
+  refreshSteppers();
+
+  // ---- Game state ----
+  let G = null; // {m,n,board,turnIdx,currentPlayer,history,actionMap,gameOver}
+
+  function snapshotBoard(board){ return board.map(row => row.map(c => c ? {...c} : null)); }
+
+  function jitter(row, col){
+    // deterministic small pseudo-random wobble per cell, for a hand-drawn feel
+    const a = (row*7 + col*13) % 5;
+    const b = (row*11 + col*5) % 5;
+    const rotate = (a - 2) * 0.5; // -1deg .. 1deg
+    const r1 = 6 + (b % 3) * 2;
+    const r2 = 6 + (a % 3) * 2;
+    return `transform:rotate(${rotate}deg); border-radius:${r1}px ${r2}px ${r1}px ${r2}px;`;
+  }
+
+  let toastTimer = null;
+  function showToast(msg){
+    toastEl.textContent = msg;
+    clearTimeout(toastTimer);
+    requestAnimationFrame(() => toastEl.classList.add('show'));
+    toastTimer = setTimeout(() => toastEl.classList.remove('show'), 1800);
+  }
+
+  function render(){
+    // turn indicator / game-over result banner
+    const lengths = findFinalBranchLength(G.board);
+    if(G.gameOver){
+      const r = lengths.R || 0, b = lengths.B || 0;
+      turnIndicator.classList.remove('turn-red','turn-blue');
+      if(r === b){
+        turnDot.style.visibility = 'hidden';
+        turnLabel.textContent = "It's a draw!";
+      } else {
+        const redWins = r > b;
+        turnDot.style.visibility = 'visible';
+        turnIndicator.classList.add(redWins ? 'turn-red' : 'turn-blue');
+        turnDot.classList.toggle('red', redWins);
+        turnDot.classList.toggle('blue', !redWins);
+        turnLabel.textContent = redWins ? 'Player 1 wins!' : 'Player 2 wins!';
+      }
+      playAgainBarBtn.classList.remove('hidden');
+    } else {
+      const isRed = G.currentPlayer === 'R';
+      turnDot.style.visibility = 'visible';
+      turnIndicator.classList.toggle('turn-red', isRed);
+      turnIndicator.classList.toggle('turn-blue', !isRed);
+      turnDot.classList.toggle('red', isRed);
+      turnDot.classList.toggle('blue', !isRed);
+      turnLabel.textContent = `Player ${isRed ? 1 : 2}'s turn (${isRed ? 'Red' : 'Blue'})`;
+      playAgainBarBtn.classList.add('hidden');
+    }
+
+    // scoreboard
+    scoreRed.textContent = `Red: ${lengths.R || 0}`;
+    scoreBlue.textContent = `Blue: ${lengths.B || 0}`;
+
+    // board
+    boardEl.style.setProperty('--cols', G.n);
+    boardEl.style.setProperty('--rows', G.m);
+    const frags = [];
+    for(let i=0;i<G.m;i++){
+      for(let j=0;j<G.n;j++){
+        const cell = G.board[i][j];
+        const key = i+','+j;
+        let cls = 'cell';
+        let content = '';
+        if(cell){
+          cls += ` filled-${cell.player}`;
+          content = cell.number;
+        } else if(!G.gameOver && G.actionMap.has(key)){
+          const player = G.currentPlayer;
+          cls += ` avail-${player}`;
+          content = G.actionMap.get(key);
+        }
+        frags.push(`<div class="${cls}" data-row="${i}" data-col="${j}" style="${jitter(i,j)}">${content}</div>`);
+      }
+    }
+    boardEl.innerHTML = frags.join('');
+
+    undoBtn.disabled = G.history.length === 0;
+    undoBtn.style.opacity = G.history.length === 0 ? .4 : 1;
+  }
+
+  boardEl.addEventListener('click', (e) => {
+    const cell = e.target.closest('.cell');
+    if(!cell || !G || G.gameOver) return;
+    const row = +cell.dataset.row, col = +cell.dataset.col;
+    onCellClick(row, col);
+  });
+
+  function onCellClick(row, col){
+    const key = row+','+col;
+    if(!G.actionMap.has(key)) return;
+    const number = G.actionMap.get(key);
+
+    G.history.push({board: snapshotBoard(G.board), turnIdx: G.turnIdx});
+
+    G.board[row][col] = {number, player: G.currentPlayer};
+    G.turnIdx = (G.turnIdx + 1) % 4;
+    G.currentPlayer = getCurrentPlayer(G.turnIdx);
+
+    advanceState();
+  }
+
+  function advanceState(){
+    while(true){
+      if(isTerminal(G.board, G.m, G.n)){
+        endGame();
+        return;
+      }
+      const acts = availableActions(G.board, G.m, G.n, G.currentPlayer);
+      if(acts.length > 0){
+        G.actionMap = new Map(acts.map(a => [a.row+','+a.col, a.number]));
+        render();
+        return;
+      }
+      // no legal move: turn passes, mirroring the original pass rule
+      const passingPlayerNum = G.currentPlayer === 'R' ? 1 : 2;
+      G.turnIdx = (G.currentPlayer === 'R') ? 1 : 3;
+      G.currentPlayer = getCurrentPlayer(G.turnIdx);
+      showToast(`Player ${passingPlayerNum} has no legal move — turn passes!`);
+    }
+  }
+
+  function endGame(){
+    G.gameOver = true;
+    G.actionMap = new Map();
+    render();
+    const result = findFinalBranchLength(G.board);
+    const r = result.R || 0, b = result.B || 0;
+    winnerOverlay.classList.remove('win-red','win-blue');
+    if(r === b){
+      winnerText.textContent = "It's a draw!";
+      winnerText.className = 'winner-text';
+    } else if(r > b){
+      winnerText.textContent = 'Player 1 wins!';
+      winnerText.className = 'winner-text win-red';
+    } else {
+      winnerText.textContent = 'Player 2 wins!';
+      winnerText.className = 'winner-text win-blue';
+    }
+    winnerDetail.textContent = `Red's longest chain reached ${r}. Blue's longest chain reached ${b}.`;
+    winnerOverlay.classList.remove('hidden');
+  }
+
+  undoBtn.addEventListener('click', () => {
+    if(!G || G.history.length === 0) return;
+    const prev = G.history.pop();
+    G.board = prev.board;
+    G.turnIdx = prev.turnIdx;
+    G.currentPlayer = getCurrentPlayer(G.turnIdx);
+    G.gameOver = false;
+    winnerOverlay.classList.add('hidden');
+    advanceState();
+  });
+
+  quitBtn.addEventListener('click', () => quitOverlay.classList.remove('hidden'));
+  quitCancelBtn.addEventListener('click', () => quitOverlay.classList.add('hidden'));
+  quitConfirmBtn.addEventListener('click', () => {
+    quitOverlay.classList.add('hidden');
+    backToSetup();
+  });
+
+  function backToSetup(){
+    G = null;
+    winnerOverlay.classList.add('hidden');
+    gameScreen.classList.add('hidden');
+    setupScreen.classList.remove('hidden');
+  }
+
+  playAgainBtn.addEventListener('click', () => {
+    winnerOverlay.classList.add('hidden');
+    backToSetup();
+  });
+
+  playAgainBarBtn.addEventListener('click', () => {
+    winnerOverlay.classList.add('hidden');
+    backToSetup();
+  });
+
+  winnerCloseBtn.addEventListener('click', () => winnerOverlay.classList.add('hidden'));
+
+  // clicking the dimmed backdrop (not the card itself) dismisses the overlay
+  // without resetting the game, so the finished board stays visible
+  winnerOverlay.addEventListener('click', (e) => {
+    if(e.target === winnerOverlay) winnerOverlay.classList.add('hidden');
+  });
+  quitOverlay.addEventListener('click', (e) => {
+    if(e.target === quitOverlay) quitOverlay.classList.add('hidden');
+  });
+
+  startBtn.addEventListener('click', () => {
+    const m = boardH, n = boardW;
+    G = {
+      m, n,
+      board: createBoard(m, n),
+      turnIdx: 0,
+      currentPlayer: getCurrentPlayer(0),
+      history: [],
+      actionMap: new Map(),
+      gameOver: false
+    };
+    setupScreen.classList.add('hidden');
+    gameScreen.classList.remove('hidden');
+    advanceState();
+  });
+
+})();
+</script>
+
+</body>
+</html>
